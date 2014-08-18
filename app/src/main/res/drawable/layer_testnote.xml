@@ -2,12 +2,14 @@
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
-        <bitmap android:src="@drawable/note_1_7"/>
+        <shape>
+            <solid android:color="#CCFFCC66" />
+            <padding android:bottom="10dp" android:top="10dp"/>
+        </shape>
     </item>
     <item>
-        <bitmap android:src="@drawable/f_cleff"/>
-    </item>
-    <item>
-        <bitmap android:src="@drawable/line_staff"/>
+        <shape>
+            <solid android:color="#CCFF9933" />
+        </shape>
     </item>
 </layer-list>

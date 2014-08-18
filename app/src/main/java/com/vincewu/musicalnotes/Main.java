@@ -1,18 +1,14 @@
 package com.vincewu.musicalnotes;
 
 import android.app.Activity;
-import android.app.ActionBar;
 import android.app.Fragment;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
@@ -63,48 +59,26 @@ public class Main extends Activity {
                 Bundle savedInstanceState) {
             LinearLayout rootView = (LinearLayout)inflater.inflate(R.layout.random_musical_note, container, false);
 
-            /*
-            FrameLayout frame = (FrameLayout)rootView.findViewById(R.id.using_frameLayout);
-
-            ImageView img1 = new ImageView(getActivity());
-            img1.setImageDrawable(getResources().getDrawable(R.drawable.note_f4));
-            img1.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-            frame.addView(img1);
-
-            ImageView img2 = new ImageView(getActivity());
-            img2.setImageDrawable(getResources().getDrawable(R.drawable.f_cleff));
-            img2.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-            frame.addView(img2);
-
-            ImageView img3 = new ImageView(getActivity());
-            img3.setImageDrawable(getResources().getDrawable(R.drawable.line_staff));
-            img3.setLayoutParams(new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-            frame.addView(img3);
-
-
-
-            Drawable[] layers = new Drawable[3];
-            layers[0] = getResources().getDrawable(R.drawable.note_f4);
-            layers[1] = getResources().getDrawable(R.drawable.g_cleff);
-            layers[2] = getResources().getDrawable(R.drawable.line_staff);
-            LayerDrawable layerDrawable = new LayerDrawable(layers);
-
-            ImageView testImage = (ImageView)rootView.findViewById(R.id.using_layerDrawable);
-            testImage.setImageDrawable(layerDrawable);
-            */
-
             NoteImageView noteImageView = new NoteImageView(getActivity());
-            noteImageView.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams noteImageViewLayoutParams = new  LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            noteImageViewLayoutParams.gravity = Gravity.CENTER;
+            noteImageViewLayoutParams.weight = 3.0f;
+            noteImageView.setLayoutParams(noteImageViewLayoutParams);
+
+            ImageView placeholder = new ImageView(getActivity());
+            placeholder.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
+            placeholder.setBackground(getResources().getDrawable(R.drawable.layer_testnote));
+            LinearLayout.LayoutParams placeholderLayoutParams = new  LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            placeholderLayoutParams.gravity = Gravity.CENTER;
+            placeholderLayoutParams.weight = 1.0f;
+            placeholder.setLayoutParams(placeholderLayoutParams);
 
             rootView.addView(noteImageView);
+            rootView.addView(placeholder);
 
             return rootView;
         }
