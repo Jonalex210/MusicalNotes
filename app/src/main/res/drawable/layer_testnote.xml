@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap android:src="@drawable/note_1_7"/>
+    </item>
+    <item>
+        <bitmap android:src="@drawable/f_cleff"/>
+    </item>
+    <item>
+        <bitmap android:src="@drawable/line_staff"/>
+    </item>
+</layer-list>
