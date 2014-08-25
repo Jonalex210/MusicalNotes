@@ -1,16 +1,20 @@
 package com.vincewu.musicalnotes;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 
 public class Main extends Activity {
@@ -49,7 +53,9 @@ public class Main extends Activity {
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment {
+    public static class PlaceholderFragment extends Fragment  implements OnTouchListener {
+
+        private final static char[] sNotesInAScale = {'C', 'D', 'E', 'F', 'G', 'A', 'B'};
 
         public PlaceholderFragment() {
         }
@@ -57,8 +63,12 @@ public class Main extends Activity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            LinearLayout rootView = (LinearLayout)inflater.inflate(R.layout.random_musical_note, container, false);
+            LinearLayout rootView = (LinearLayout)inflater.inflate(
+                    R.layout.random_musical_note, container, false);
 
+            /*
+             * Show a random note
+             */
             NoteImageView noteImageView = new NoteImageView(getActivity());
             LinearLayout.LayoutParams noteImageViewLayoutParams = new  LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -66,21 +76,76 @@ public class Main extends Activity {
             noteImageViewLayoutParams.gravity = Gravity.CENTER;
             noteImageViewLayoutParams.weight = 3.0f;
             noteImageView.setLayoutParams(noteImageViewLayoutParams);
+            noteImageView.setBackground(getResources().getDrawable(R.drawable.debug_border));
 
-            ImageView placeholder = new ImageView(getActivity());
-            placeholder.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
-            placeholder.setBackground(getResources().getDrawable(R.drawable.layer_testnote));
-            LinearLayout.LayoutParams placeholderLayoutParams = new  LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            placeholderLayoutParams.gravity = Gravity.CENTER;
-            placeholderLayoutParams.weight = 1.0f;
-            placeholder.setLayoutParams(placeholderLayoutParams);
+            /*
+             * 4-octave piano scale
+             * TODO: turn this into a custom viewgroup
+             * TODO: require minimum width, and dynamically calculate size for keys
+             */
+            RelativeLayout rl = new RelativeLayout(getActivity());
+            rl.setBackground(getResources().getDrawable(R.drawable.debug_border));
+
+            // draw white keys
+            for (int i=0; i<28; i++) {
+                ImageView iv;
+                RelativeLayout.LayoutParams params;
+
+                iv = new ImageView(getActivity());
+                iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
+                iv.setScaleType(ImageView.ScaleType.FIT_XY);
+
+                // for debugging: which key was tapped, e.g. "C4"
+                iv.setTag(R.id.NOTES_TAG, "" + sNotesInAScale[i%7] + (i/4));
+                iv.setOnTouchListener(this);
+
+                params = new RelativeLayout.LayoutParams(56, 220);
+                params.leftMargin = 54 * i + 10;
+                params.topMargin = 10;
+                params.bottomMargin = 10;
+                rl.addView(iv, params);
+            }
+
+            // draw black keys
+            for (int i=0; i<20; i++) {
+                ImageView iv;
+                RelativeLayout.LayoutParams params;
+
+                iv = new ImageView(getActivity());
+                iv.setImageDrawable(getResources().getDrawable(R.drawable.black_key));
+                iv.setScaleType(ImageView.ScaleType.FIT_XY);
+
+                params = new RelativeLayout.LayoutParams(40, 132);
+                // black key pattern is groups of 2 and 3
+                params.leftMargin = (54 * ((i/5 * 2) + (i%5 > 1 ? i+1 : i)) ) + 10 + 35;
+                params.topMargin = 11;
+                params.bottomMargin = 10;
+                rl.addView(iv, params);
+            }
 
             rootView.addView(noteImageView);
-            rootView.addView(placeholder);
+            rootView.addView(rl);
 
             return rootView;
         }
+
+
+        public boolean onTouch(android.view.View view, android.view.MotionEvent motionEvent) {
+            final ImageView iv = (ImageView)view;
+            iv.setImageDrawable(getResources().getDrawable(R.drawable.highlight_key));
+
+            new AlertDialog.Builder(getActivity())
+                .setTitle("Touched " + view.getTag(R.id.NOTES_TAG))
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    public void onDismiss(final DialogInterface dialog) {
+                        iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
+                    }
+                })
+                .show();
+
+            return false;
+        }
     }
+
+
 }

@@ -1,6 +1,5 @@
 package com.vincewu.musicalnotes;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -12,11 +11,13 @@ import java.util.Random;
 
 public class NoteImageView extends ImageView {
 
-    private Context context;
-    private Drawable[] layers;
-    private boolean g_cleff;
+    private static Random sRandom = new Random();
 
-    private static int[] all_notes = {
+    private Context mContext;
+    private Drawable[] mLayers;
+    private boolean mIsGCleff;
+
+    private static int[] mNoteDrawables = {
             R.drawable.note_1_1,
             R.drawable.note_1_2,
             R.drawable.note_1_3,
@@ -38,19 +39,17 @@ public class NoteImageView extends ImageView {
             R.drawable.note_3_5
     };
 
-    private static Random randum = new Random();
-
     public NoteImageView(Context context) {
         super(context);
 
-        this.context = context;
+        this.mContext = context;
 
-        this.layers = new Drawable[3];
-        this.layers[0] = getResources().getDrawable(R.drawable.line_staff);
-        this.layers[1] = getResources().getDrawable(R.drawable.note_1_7);
-        this.layers[2] = getResources().getDrawable(R.drawable.f_cleff);
+        this.mLayers = new Drawable[3];
+        this.mLayers[0] = getResources().getDrawable(R.drawable.line_staff);
+        this.mLayers[1] = getResources().getDrawable(R.drawable.note_1_7);
+        this.mLayers[2] = getResources().getDrawable(R.drawable.f_cleff);
 
-        LayerDrawable layerDrawable = new LayerDrawable(layers);
+        LayerDrawable layerDrawable = new LayerDrawable(mLayers);
         setImageDrawable(layerDrawable);
     }
 
@@ -58,26 +57,17 @@ public class NoteImageView extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-/*
-        new AlertDialog.Builder(this.context)
-                .setTitle("Touched!")
-                .show();
-*/
+        mIsGCleff = (sRandom.nextInt(2) == 1);
+        this.mLayers[2] = getResources().getDrawable(mIsGCleff ? R.drawable.g_cleff : R.drawable.f_cleff);
+        this.mLayers[1] = getResources().getDrawable(mNoteDrawables[sRandom.nextInt(mNoteDrawables.length)]);
 
-        g_cleff = (randum.nextInt(2) == 1);
-        this.layers[2] = getResources().getDrawable(g_cleff ? R.drawable.g_cleff : R.drawable.f_cleff);
-        this.layers[1] = getResources().getDrawable(all_notes[randum.nextInt(all_notes.length)]);
-
-        LayerDrawable layerDrawable = new LayerDrawable(layers);
+        LayerDrawable layerDrawable = new LayerDrawable(mLayers);
         setImageDrawable(layerDrawable);
 
         return super.onTouchEvent(event);
-
     }
 }
