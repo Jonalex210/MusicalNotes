@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -53,30 +52,52 @@ public class Main extends Activity {
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment  implements OnTouchListener {
+    public static class PlaceholderFragment extends Fragment implements View.OnClickListener {
 
+        // TODO: used for tagging keys. Refactor this.
         private final static char[] sNotesInAScale = {'C', 'D', 'E', 'F', 'G', 'A', 'B'};
 
-        public PlaceholderFragment() {
-        }
+        private NoteModel mNoteModel;
+        private NoteImageView mNoteImageView;
+
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             LinearLayout rootView = (LinearLayout)inflater.inflate(
                     R.layout.random_musical_note, container, false);
+            rootView.setBackground(getResources().getDrawable(R.drawable.debug_border));
 
             /*
              * Show a random note
              */
-            NoteImageView noteImageView = new NoteImageView(getActivity());
+            mNoteImageView = new NoteImageView(getActivity());
             LinearLayout.LayoutParams noteImageViewLayoutParams = new  LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             noteImageViewLayoutParams.gravity = Gravity.CENTER;
             noteImageViewLayoutParams.weight = 3.0f;
-            noteImageView.setLayoutParams(noteImageViewLayoutParams);
-            noteImageView.setBackground(getResources().getDrawable(R.drawable.debug_border));
+            mNoteImageView.setLayoutParams(noteImageViewLayoutParams);
+            mNoteImageView.setBackground(getResources().getDrawable(R.drawable.debug_border));
+
+            mNoteModel = NoteModel.getRandomNote();
+            mNoteImageView.setNoteModel(mNoteModel);
+
+            mNoteImageView.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    if (v instanceof NoteImageView) {
+                        NoteModel newNote = NoteModel.getRandomNote();
+                        int guard = 0;
+                        while (newNote.equals(mNoteModel) && guard < 10) {
+                            newNote = NoteModel.getRandomNote();
+                            guard++;
+                        }
+                        mNoteModel = newNote;
+                        ((NoteImageView) v).setNoteModel(mNoteModel);
+                    }
+                }
+            });
+
 
             /*
              * 4-octave piano scale
@@ -85,6 +106,12 @@ public class Main extends Activity {
              */
             RelativeLayout rl = new RelativeLayout(getActivity());
             rl.setBackground(getResources().getDrawable(R.drawable.debug_border));
+            LinearLayout.LayoutParams pianoKeysLayoutParams = new  LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            pianoKeysLayoutParams.gravity = Gravity.CENTER;
+            rl.setLayoutParams(pianoKeysLayoutParams);
+
 
             // draw white keys
             for (int i=0; i<28; i++) {
@@ -96,11 +123,11 @@ public class Main extends Activity {
                 iv.setScaleType(ImageView.ScaleType.FIT_XY);
 
                 // for debugging: which key was tapped, e.g. "C4"
-                iv.setTag(R.id.NOTES_TAG, "" + sNotesInAScale[i%7] + (i/4));
-                iv.setOnTouchListener(this);
+                iv.setTag(R.id.NOTES_TAG, "" + sNotesInAScale[i%7] + (i/7 + 2));
+                iv.setOnClickListener(this);
 
-                params = new RelativeLayout.LayoutParams(56, 220);
-                params.leftMargin = 54 * i + 10;
+                params = new RelativeLayout.LayoutParams(62, 220);
+                params.leftMargin = 60 * i;
                 params.topMargin = 10;
                 params.bottomMargin = 10;
                 rl.addView(iv, params);
@@ -115,37 +142,55 @@ public class Main extends Activity {
                 iv.setImageDrawable(getResources().getDrawable(R.drawable.black_key));
                 iv.setScaleType(ImageView.ScaleType.FIT_XY);
 
-                params = new RelativeLayout.LayoutParams(40, 132);
+                params = new RelativeLayout.LayoutParams(46, 132);
                 // black key pattern is groups of 2 and 3
-                params.leftMargin = (54 * ((i/5 * 2) + (i%5 > 1 ? i+1 : i)) ) + 10 + 35;
+                params.leftMargin = (60 * ((i/5 * 2) + (i%5 > 1 ? i+1 : i)) ) + 37;
                 params.topMargin = 11;
                 params.bottomMargin = 10;
                 rl.addView(iv, params);
             }
 
-            rootView.addView(noteImageView);
+            rootView.addView(mNoteImageView);
             rootView.addView(rl);
 
             return rootView;
         }
 
 
-        public boolean onTouch(android.view.View view, android.view.MotionEvent motionEvent) {
+        /**
+         * Check whether selected note matches and show appropriate message.
+         * If note matches, display another random note.
+         */
+        @Override
+        public void onClick(View view) {
             final ImageView iv = (ImageView)view;
             iv.setImageDrawable(getResources().getDrawable(R.drawable.highlight_key));
 
-            new AlertDialog.Builder(getActivity())
-                .setTitle("Touched " + view.getTag(R.id.NOTES_TAG))
-                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+            String touchedNote = (String)view.getTag(R.id.NOTES_TAG);
+            String msg = "You touched " + touchedNote;
+            final boolean correct = touchedNote.equals(mNoteModel.toString());
+            msg += correct ? ". Correct!" : ". Try again...!";
+
+            AlertDialog response = new AlertDialog.Builder(getActivity()).setTitle(msg).create();
+            response.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     public void onDismiss(final DialogInterface dialog) {
                         iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
+                        if (correct) {
+                            NoteModel newNote = NoteModel.getRandomNote();
+                            int guard = 0;
+                            while (newNote.equals(mNoteModel) && guard < 10) {
+                                newNote = NoteModel.getRandomNote();
+                                guard++;
+                            }
+                            mNoteModel = newNote;
+                            mNoteImageView.setNoteModel(mNoteModel);
+                        }
                     }
-                })
-                .show();
+                });
+            response.show();
+        }
 
-            return false;
+        public PlaceholderFragment() {
         }
     }
-
-
 }
