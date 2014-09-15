@@ -2,4 +2,8 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!-- font size in sp -->
+    <integer name="MotivatorTextSize.Correct">42</integer>
+    <integer name="MotivatorTextSize.Wrong">26</integer>
 </resources>

@@ -1,7 +1,6 @@
 package com.vincewu.musicalnotes;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -21,7 +20,7 @@ public class Main extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_main);
+        setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction()
                     .add(R.id.container, new PlaceholderFragment())
@@ -60,12 +59,12 @@ public class Main extends Activity {
         private NoteModel mNoteModel;
         private NoteImageView mNoteImageView;
 
-
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
+
             LinearLayout rootView = (LinearLayout)inflater.inflate(
-                    R.layout.random_musical_note, container, false);
+                    R.layout.fragment_main, container, false);
             rootView.setBackground(getResources().getDrawable(R.drawable.debug_border));
 
             /*
@@ -97,7 +96,6 @@ public class Main extends Activity {
                     }
                 }
             });
-
 
             /*
              * 4-octave piano scale
@@ -156,6 +154,14 @@ public class Main extends Activity {
             return rootView;
         }
 
+        @Override
+        public void onDestroyView() {
+            // Must clean up static resources in MotivatorDialog
+            MotivatorDialog.onDestroyView();
+
+            super.onDestroyView();
+        }
+
 
         /**
          * Check whether selected note matches and show appropriate message.
@@ -163,31 +169,34 @@ public class Main extends Activity {
          */
         @Override
         public void onClick(View view) {
+            // Highlight the piano key
             final ImageView iv = (ImageView)view;
             iv.setImageDrawable(getResources().getDrawable(R.drawable.highlight_key));
 
+            // Check whether user is right or wrong
             String touchedNote = (String)view.getTag(R.id.NOTES_TAG);
-            String msg = "You touched " + touchedNote;
-            final boolean correct = touchedNote.equals(mNoteModel.toString());
-            msg += correct ? ". Correct!" : ". Try again...!";
+            final boolean isAnswerCorrect = touchedNote.equals(mNoteModel.toString());
 
-            AlertDialog response = new AlertDialog.Builder(getActivity()).setTitle(msg).create();
-            response.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    public void onDismiss(final DialogInterface dialog) {
-                        iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
-                        if (correct) {
-                            NoteModel newNote = NoteModel.getRandomNote();
-                            int guard = 0;
-                            while (newNote.equals(mNoteModel) && guard < 10) {
-                                newNote = NoteModel.getRandomNote();
-                                guard++;
-                            }
-                            mNoteModel = newNote;
-                            mNoteImageView.setNoteModel(mNoteModel);
+            // Draw "motivator" dialog
+            MotivatorDialog motivatorDialog =
+                    new MotivatorDialog(getActivity(), isAnswerCorrect, touchedNote);
+            // When dismissed, show another random musical note
+            motivatorDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                public void onDismiss(final DialogInterface dialog) {
+                    iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
+                    if (isAnswerCorrect) {
+                        NoteModel newNote = NoteModel.getRandomNote();
+                        int guard = 0;
+                        while (newNote.equals(mNoteModel) && guard < 10) {
+                            newNote = NoteModel.getRandomNote();
+                            guard++;
                         }
+                        mNoteModel = newNote;
+                        mNoteImageView.setNoteModel(mNoteModel);
                     }
-                });
-            response.show();
+                }
+            });
+            motivatorDialog.show();
         }
 
         public PlaceholderFragment() {
