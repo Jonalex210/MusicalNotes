@@ -10,12 +10,116 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 
 public class Main extends Activity {
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class PlaceholderFragment extends Fragment {
+
+        private NoteModel mNoteModel;
+        private NoteImageView mNoteImageView;
+        private PianoView mPianoView;
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                Bundle savedInstanceState) {
+
+            LinearLayout rootView = (LinearLayout)inflater.inflate(
+                    R.layout.fragment_main, container, false);
+            rootView.setBackground(getResources().getDrawable(R.drawable.debug_border));
+
+            /*
+             * View displays a random note for the user to guess
+             * TODO: this is hardcoded to show notes relevant for a piano. Make this configurable?
+             */
+            mNoteImageView = new NoteImageView(getActivity());
+            LinearLayout.LayoutParams noteImageViewLayoutParams = new  LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            noteImageViewLayoutParams.gravity = Gravity.CENTER;
+            noteImageViewLayoutParams.weight = 3.0f;
+            mNoteImageView.setLayoutParams(noteImageViewLayoutParams);
+            //mNoteImageView.setBackground(getResources().getDrawable(R.drawable.debug_border));
+
+            nextRandomNote();
+
+            mNoteImageView.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    // let the user skip a note by tapping
+                    // TODO: do we really need this?
+                    if (v instanceof NoteImageView) nextRandomNote();
+                }
+            });
+
+            /*
+             * View displays a musical instrument
+             * TODO: this is hardcoded to the piano. Make this configurable?
+             */
+            mPianoView = new PianoView(getActivity());
+            LinearLayout.LayoutParams pianoViewLayoutParams = new  LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            pianoViewLayoutParams.gravity = Gravity.CENTER;
+            mPianoView.setLayoutParams(pianoViewLayoutParams);
+            //mPianoView.setBackground(getResources().getDrawable(R.drawable.debug_border));
+
+            mPianoView.setPianoOnClickListener(new PianoView.PianoOnClickListener() {
+                public void onClick(NoteModel clickedNote) {
+                    // Check whether user is right or wrong
+                    if (clickedNote == null) return;
+                    final boolean isAnswerCorrect = clickedNote.equals(mNoteModel);
+
+                    // Draw "motivator" dialog
+                    MotivatorDialog motivatorDialog =
+                            new MotivatorDialog(getActivity(),
+                                    isAnswerCorrect, clickedNote.toString());
+                    // When dismissed, show another random musical note
+                    motivatorDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        public void onDismiss(final DialogInterface dialog) {
+                            mPianoView.resetClickedKey();
+                            if (isAnswerCorrect) nextRandomNote();
+                        }
+                    });
+                    motivatorDialog.show();
+                }
+            });
+
+            // attach
+            rootView.addView(mNoteImageView);
+            rootView.addView(mPianoView);
+
+            return rootView;
+        }
+
+        /* Display another random note */
+        private void nextRandomNote() {
+            NoteModel newNote = NoteModel.getRandomNote();
+            int guard = 0;
+            while (newNote.equals(mNoteModel) && guard < 10) {
+                newNote = NoteModel.getRandomNote();
+                guard++;
+            }
+            mNoteModel = newNote;
+            mNoteImageView.setNoteModel(mNoteModel);
+        }
+
+        @Override
+        public void onDestroyView() {
+            // Must clean up static resources in MotivatorDialog
+            MotivatorDialog.onDestroyView();
+
+            super.onDestroyView();
+        }
+
+        public PlaceholderFragment() {}
+    }
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,158 +152,4 @@ public class Main extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment implements View.OnClickListener {
-
-        // TODO: used for tagging keys. Refactor this.
-        private final static char[] sNotesInAScale = {'C', 'D', 'E', 'F', 'G', 'A', 'B'};
-
-        private NoteModel mNoteModel;
-        private NoteImageView mNoteImageView;
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-
-            LinearLayout rootView = (LinearLayout)inflater.inflate(
-                    R.layout.fragment_main, container, false);
-            rootView.setBackground(getResources().getDrawable(R.drawable.debug_border));
-
-            /*
-             * Show a random note
-             */
-            mNoteImageView = new NoteImageView(getActivity());
-            LinearLayout.LayoutParams noteImageViewLayoutParams = new  LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            noteImageViewLayoutParams.gravity = Gravity.CENTER;
-            noteImageViewLayoutParams.weight = 3.0f;
-            mNoteImageView.setLayoutParams(noteImageViewLayoutParams);
-            mNoteImageView.setBackground(getResources().getDrawable(R.drawable.debug_border));
-
-            mNoteModel = NoteModel.getRandomNote();
-            mNoteImageView.setNoteModel(mNoteModel);
-
-            mNoteImageView.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    if (v instanceof NoteImageView) {
-                        NoteModel newNote = NoteModel.getRandomNote();
-                        int guard = 0;
-                        while (newNote.equals(mNoteModel) && guard < 10) {
-                            newNote = NoteModel.getRandomNote();
-                            guard++;
-                        }
-                        mNoteModel = newNote;
-                        ((NoteImageView) v).setNoteModel(mNoteModel);
-                    }
-                }
-            });
-
-            /*
-             * 4-octave piano scale
-             * TODO: turn this into a custom viewgroup
-             * TODO: require minimum width, and dynamically calculate size for keys
-             */
-            RelativeLayout rl = new RelativeLayout(getActivity());
-            rl.setBackground(getResources().getDrawable(R.drawable.debug_border));
-            LinearLayout.LayoutParams pianoKeysLayoutParams = new  LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            pianoKeysLayoutParams.gravity = Gravity.CENTER;
-            rl.setLayoutParams(pianoKeysLayoutParams);
-
-
-            // draw white keys
-            for (int i=0; i<28; i++) {
-                ImageView iv;
-                RelativeLayout.LayoutParams params;
-
-                iv = new ImageView(getActivity());
-                iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
-                iv.setScaleType(ImageView.ScaleType.FIT_XY);
-
-                // for debugging: which key was tapped, e.g. "C4"
-                iv.setTag(R.id.NOTES_TAG, "" + sNotesInAScale[i%7] + (i/7 + 2));
-                iv.setOnClickListener(this);
-
-                params = new RelativeLayout.LayoutParams(62, 220);
-                params.leftMargin = 60 * i;
-                params.topMargin = 10;
-                params.bottomMargin = 10;
-                rl.addView(iv, params);
-            }
-
-            // draw black keys
-            for (int i=0; i<20; i++) {
-                ImageView iv;
-                RelativeLayout.LayoutParams params;
-
-                iv = new ImageView(getActivity());
-                iv.setImageDrawable(getResources().getDrawable(R.drawable.black_key));
-                iv.setScaleType(ImageView.ScaleType.FIT_XY);
-
-                params = new RelativeLayout.LayoutParams(46, 132);
-                // black key pattern is groups of 2 and 3
-                params.leftMargin = (60 * ((i/5 * 2) + (i%5 > 1 ? i+1 : i)) ) + 37;
-                params.topMargin = 11;
-                params.bottomMargin = 10;
-                rl.addView(iv, params);
-            }
-
-            rootView.addView(mNoteImageView);
-            rootView.addView(rl);
-
-            return rootView;
-        }
-
-        @Override
-        public void onDestroyView() {
-            // Must clean up static resources in MotivatorDialog
-            MotivatorDialog.onDestroyView();
-
-            super.onDestroyView();
-        }
-
-
-        /**
-         * Check whether selected note matches and show appropriate message.
-         * If note matches, display another random note.
-         */
-        @Override
-        public void onClick(View view) {
-            // Highlight the piano key
-            final ImageView iv = (ImageView)view;
-            iv.setImageDrawable(getResources().getDrawable(R.drawable.highlight_key));
-
-            // Check whether user is right or wrong
-            String touchedNote = (String)view.getTag(R.id.NOTES_TAG);
-            final boolean isAnswerCorrect = touchedNote.equals(mNoteModel.toString());
-
-            // Draw "motivator" dialog
-            MotivatorDialog motivatorDialog =
-                    new MotivatorDialog(getActivity(), isAnswerCorrect, touchedNote);
-            // When dismissed, show another random musical note
-            motivatorDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                public void onDismiss(final DialogInterface dialog) {
-                    iv.setImageDrawable(getResources().getDrawable(R.drawable.white_key));
-                    if (isAnswerCorrect) {
-                        NoteModel newNote = NoteModel.getRandomNote();
-                        int guard = 0;
-                        while (newNote.equals(mNoteModel) && guard < 10) {
-                            newNote = NoteModel.getRandomNote();
-                            guard++;
-                        }
-                        mNoteModel = newNote;
-                        mNoteImageView.setNoteModel(mNoteModel);
-                    }
-                }
-            });
-            motivatorDialog.show();
-        }
-
-        public PlaceholderFragment() {
-        }
-    }
 }

@@ -21,15 +21,15 @@ public class NoteModel {
     public static final String _B = "B";
 
     // For
-    private static final List<String> sValidLetters = new ArrayList<String>();
+    public static final List<String> sNotesCMaj = new ArrayList<String>();
     static {
-        sValidLetters.add(_C);
-        sValidLetters.add(_D);
-        sValidLetters.add(_E);
-        sValidLetters.add(_F);
-        sValidLetters.add(_G);
-        sValidLetters.add(_A);
-        sValidLetters.add(_B);
+        sNotesCMaj.add(_C);
+        sNotesCMaj.add(_D);
+        sNotesCMaj.add(_E);
+        sNotesCMaj.add(_F);
+        sNotesCMaj.add(_G);
+        sNotesCMaj.add(_A);
+        sNotesCMaj.add(_B);
     }
 
     /* For generating a random note
@@ -41,7 +41,7 @@ public class NoteModel {
      * Generate a random note
      */
     public static NoteModel getRandomNote() {
-        String letter = sValidLetters.get(sRandom.nextInt(sValidLetters.size()));
+        String letter = sNotesCMaj.get(sRandom.nextInt(sNotesCMaj.size()));
         int octave;
 
         if (letter.equals(_B)) {
@@ -80,7 +80,7 @@ public class NoteModel {
      * @param octave
      */
     public NoteModel(String letter, int octave) {
-        if (letter == null || !sValidLetters.contains(letter)) {
+        if (letter == null || !sNotesCMaj.contains(letter)) {
             throw new IllegalArgumentException("Note letter not valid: " + letter);
         }
 
@@ -111,10 +111,10 @@ public class NoteModel {
         } else if (this.octave >= 5) {
             result = Cleff.G;
         } else if (this.octave == 3 &&
-                (sValidLetters.indexOf(this.letter) < sValidLetters.indexOf(_G))) {
+                (sNotesCMaj.indexOf(this.letter) < sNotesCMaj.indexOf(_G))) {
             result = Cleff.F;
         } else if (this.octave == 4 &&
-                (sValidLetters.indexOf(this.letter) > sValidLetters.indexOf(_F))) {
+                (sNotesCMaj.indexOf(this.letter) > sNotesCMaj.indexOf(_F))) {
             result = Cleff.G;
         }
 
@@ -126,8 +126,8 @@ public class NoteModel {
      * @return number of notes between this note and otherNote. E.g. C5 - C4 would be 7.
      */
     public int getDistance(NoteModel otherNote) {
-        int thisRelPos = (this.octave * 7) + sValidLetters.indexOf(this.letter);
-        int otherRelPos = (otherNote.octave * 7) + sValidLetters.indexOf(otherNote.letter);
+        int thisRelPos = (this.octave * 7) + sNotesCMaj.indexOf(this.letter);
+        int otherRelPos = (otherNote.octave * 7) + sNotesCMaj.indexOf(otherNote.letter);
         return thisRelPos - otherRelPos;
     }
 
